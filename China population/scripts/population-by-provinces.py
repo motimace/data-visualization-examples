@@ -9,23 +9,6 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
 
-#逐行读取数据
-path = 'data/上海.csv'
-with open(path) as f:
-    lines = f.readlines()
-popu = pd.DataFrame(lines[3:5])
-popu = popu.replace('\n', '', regex=True)
-popu = popu[0].str.split(',', expand=True)
-#删除缺失数据
-popu = popu.T.drop(0)
-popu = popu.loc[:19]
-
-popu.columns = ['time', '上海']
-popu['time'] = popu['time'].replace('年', '', regex=True).astype('int')
-popu = popu.sort_values(by='time')
-popu.head()
-
-
 def clean_population():
     """整理国家统计局29省市年末常住人口数据"""
     provinces = ['黑龙江', '辽宁', '吉林', '河北', '山西', '河南', '山东', '江苏',
@@ -46,7 +29,7 @@ def clean_population():
         popu = popu.loc[:19]
         #列名
         popu.columns = ['time', province]
-        popu[province] = popu[province].astype('float')
+        popu[province] = popu[province].astype('int')
         popu['time'] = popu['time'].replace('年', '', regex=True).astype('int')
         popu = popu.sort_values(by='time')
         #各省市数据聚合
@@ -64,7 +47,7 @@ for city in ['北京', '天津', '香港', '澳门', '台湾']:
     path = 'data/京津/' + city + '.csv'
     _ = pd.read_csv(path)
     _['time'] = _['time'].astype('int')
-    _[city] = _[city].astype('float')
+    _[city] = _[city].astype('int')
     population_5 = pd.merge(population_5, _, on='time')
     
 #整合34个行政区2000-2018年末总人口数据
@@ -92,4 +75,16 @@ for time in populations.index:
             title_opts=opts.TitleOpts(title="中国各省市人口"),
             visualmap_opts=opts.VisualMapOpts(max_=10000),
         )
-    popu_map.render("plots/" + str(time) + ".html")   
+    popu_map.render("plots/" + str(time) + ".html")
+    
+#动态展示各省市人口变化
+sorted_pops = []
+for year in range(2000, 2019):
+    populations.sort_values(year, axis=1, inplace=True)
+    sorted_pops.append([year, populations.loc[year].tolist(), 
+                        populations.columns.tolist()])
+        
+import plot_population_by_province
+
+plot = plot_population_by_province.Plot(sorted_pops)
+plot.showGif('plots/population-by-province.gif')
