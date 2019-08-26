@@ -8,7 +8,6 @@ Created on Sun Aug 25 18:12:03 2019
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-from matplotlib.font_manager import FontProperties
 
 #逐行读取数据
 path = 'data/china-GDP.csv'
@@ -46,7 +45,8 @@ ax.barh(data.index, data.iloc[:,4], left=data.iloc[:,2]+data.iloc[:,3],
         label='tertiary sector')
 ax.set_xscale('log')
 ax.legend(loc='best')
-ax.set_xlabel('亿元', FontProperties='SimHei')
+ax.set_xlabel('Unit: CNY 100 million')
+#设置字体FontProperties='SimHei'
 fig.savefig('plots/barplot-of-china-gdp-composition-by-sector.jpg')
 plt.show()
 
@@ -57,7 +57,7 @@ ax.plot(data.index, data.iloc[:,3], label='secondary sector')
 ax.plot(data.index, data.iloc[:,4], label='tertiary sector')
 ax.set_yscale('log')
 ax.legend(loc='best')
-ax.set_ylabel('亿元', FontProperties='SimHei')
+ax.set_ylabel('Unit: CNY 100 million')
 fig.savefig('plots/line-chart-of-china-gdp-composition-by-sector.jpg')
 plt.show()
 
@@ -67,6 +67,21 @@ fig, ax = plt.subplots(figsize=(10, 8))
 ax.stackplot(data.index, data.iloc[:,2], data.iloc[:,3], data.iloc[:,4], 
              labels=labels)
 ax.legend(loc='upper left')
-ax.set_ylabel('亿元', FontProperties='SimHei')
+ax.set_ylabel('Unit: CNY 100 million')
 fig.savefig('plots/stackplot-of-china-gdp-composition-by-sector.jpg')
 plt.show()
+
+
+#动态展示GDP组成饼图
+gdp_composition = []
+gdp_sector = data.iloc[:, 2:5]
+gdp_sector_rate = gdp_sector.div(data.iloc[:, 1], axis=0)
+for year in sorted(data.index):
+    gdp_composition.append([year, gdp_sector.loc[year].tolist()])
+import sys
+sys.path.append('../')
+
+from module import plot_pie_bar
+
+pie = plot_pie_bar.Plot(gdp_composition)
+pie.showGif('plots/pie_bar.gif')
