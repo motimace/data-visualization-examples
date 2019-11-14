@@ -61,21 +61,28 @@ populations = pd.read_csv('data/population-by-province.csv',
                           index_col='time')
 
 #各省市人口可视化
-from pyecharts.charts import Map
+from pyecharts.charts import Map, Timeline
 from pyecharts import options as opts
+import seaborn as sns
+colors = sns.color_palette("Blues", 10).as_hex()
 
-attr = populations.columns.values
+time_map = Timeline()
+attr = populations.columns.tolist()
 for time in populations.index:
-    values = populations.loc[time].values
+    values = populations.loc[time].tolist()
     popu_map = Map()
-    popu_map.add(str(time), [list(z) for z in zip(attr, values)],  maptype="china", 
+    popu_map.add("", [list(z) for z in zip(attr, values)],  maptype="china", 
                           is_map_symbol_show=False)
     popu_map.set_series_opts(label_opts=opts.LabelOpts(is_show=False))
     popu_map.set_global_opts(
-            title_opts=opts.TitleOpts(title="中国各省市人口"),
-            visualmap_opts=opts.VisualMapOpts(max_=10000),
+            title_opts=opts.TitleOpts(title="China population by province from 2000 to 2018",
+                                      subtitle="Units: 10K"),
+            visualmap_opts=opts.VisualMapOpts(max_=12000, is_piecewise=True,
+                                              split_number=12, range_color=colors),
+            toolbox_opts=opts.ToolboxOpts()
         )
-    popu_map.render("plots/" + str(time) + ".html")
+    time_map.add(popu_map, "{}".format(time))
+time_map.render("plots/population-map-over-time.html")
     
 #动态展示各省市人口变化
 sorted_pops = []
